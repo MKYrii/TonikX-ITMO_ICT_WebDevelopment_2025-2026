@@ -1,7 +1,5 @@
 import requests
 
-# response_get = requests.get("http://127.0.0.1:8080")
-
 payload1 = {'discipline': "math", 'mark': "5"}
 payload2 = {'discipline': "math", 'mark': "2"}
 payload3 = {'discipline': "linal", 'mark': "3"}

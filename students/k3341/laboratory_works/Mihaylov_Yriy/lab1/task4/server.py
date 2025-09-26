@@ -15,7 +15,10 @@ def process_user(client_connection, client_address):
         with users_lock:
             for user in users:
                 if user != client_connection:
-                    user.sendall(message)
+                    try:
+                        user.sendall(message)
+                    except:
+                        users.remove(user)
 
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
