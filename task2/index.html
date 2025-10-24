@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../task1/">
       
       
-        <link rel="next" href="../task2/">
+        <link rel="next" href="../task3/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Задача 1 - Отчёты по лабораторным работам</title>
+        <title>Задача 2 - Отчёты по лабораторным работам</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#1" class="md-skip">
+        <a href="#2" class="md-skip">
           Перейти к содержанию
         </a>
       
@@ -98,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Задача 1
+              Задача 2
             
           </span>
         </div>
@@ -253,6 +253,29 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../task1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Задача 1
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -270,7 +293,7 @@
   
   
   <span class="md-ellipsis">
-    Задача 1
+    Задача 2
     
   </span>
   
@@ -283,7 +306,7 @@
   
   
   <span class="md-ellipsis">
-    Задача 1
+    Задача 2
     
   </span>
   
@@ -369,29 +392,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../task2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Задача 2
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -643,59 +643,73 @@
 
 
 
-<h1 id="1">Задача 1</h1>
+<h1 id="2">Задача 2</h1>
 <h2 id="_1">Цель</h2>
-<p>Реализовать клиентскую и серверную часть приложения с использованием библиотеки <strong>socket</strong> и протокола <strong>UDP</strong>.<br />
-Клиент должен отправить серверу сообщение <em>«Hello, server»</em>, сервер выводит его у себя и отвечает <em>«Hello, client»</em>, которое отображается у клиента.</p>
+<p>Реализовать клиентскую и серверную часть приложения с использованием библиотеки <strong>socket</strong> и протокола <strong>TCP</strong>.<br />
+Клиент запрашивает выполнение математической операции (в данном случае — <strong>теорема Пифагора</strong>), сервер обрабатывает данные и возвращает результат клиенту.</p>
 <h2 id="_2">Выполнение</h2>
 <p>В ходе выполнения были реализованы клиент и сервер, где:
-- <strong>Клиент</strong> отправляет строку <code>"Hello, server!"</code> серверу по протоколу UDP.<br />
-- <strong>Сервер</strong> принимает сообщение и выводит его в консоль.<br />
-- В ответ сервер отправляет строку <code>"Hello, client!"</code>, которая отображается в консоли у клиента.  </p>
+- <strong>Клиент</strong> подключается к серверу по TCP, вводит три числа и отправляет их.<br />
+- <strong>Сервер</strong> принимает числа, вычисляет решение квадратного уравнения вида <code>ax^2 + bx + c = 0</code> через формулу дискриминанта и возвращает результат клиенту.<br />
+- Также на сервере обработан случай, если уравнение не имеет действительных корней.</p>
 <h3 id="_3">Клиент</h3>
 <pre><code class="language-python">import socket
 
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-server_address = ('localhost', 8080)
-message = 'Hello, server!'
-client_socket.sendto(message.encode(), server_address)
+client_socket.connect(('localhost', 8080))
 
-response, server_addr = client_socket.recvfrom(1024)
-print(f'Ответ от сервера {server_addr}: {response.decode()}')
+data = input(&quot;введите 3 числа через пробел для решения уравнения вида ax^2 + bx + c = 0:\n&quot;)
+
+client_socket.sendall(data.encode())
+
+response = client_socket.recv(1024)
+print(f'Ответ от сервера: {response.decode()}')
 
 client_socket.close()
-print('клиент закрыт')
 </code></pre>
 <h3 id="_4">Сервер</h3>
 <pre><code class="language-python">import socket
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# ax^2 + bx + c = 0
+def solve_sqr(a, b, c):
+    d = b**2 - 4*a*c
+    if d &lt; 0:
+        return &quot;дискриминант меньше 0&quot;
+    else:
+        return f&quot;ответ: x1 = {(-b + d**0.5)/(2*a)}, x2 = {(-b - d**0.5)/(2*a)}&quot;
+
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server_socket.bind(('localhost', 8080))
 
-print(&quot;server running on port 8080&quot;)
+server_socket.listen(1)
+print(&quot;Сервер запущен на порту 8080...&quot;)
 
 while True:
-    data, client_address = server_socket.recvfrom(1024)
-    print(f'Получено от {client_address}: {data.decode()}')
+    client_connection, client_address = server_socket.accept()
+    print(f'Подключение от {client_address}')
 
-    response = &quot;Hello, client!&quot;
-    server_socket.sendto(response.encode(), client_address)
+    request = list(map(int, client_connection.recv(1024).decode().split()))
+
+    print(f'Данные от клиента: a:{request[0]} b:{request[1]} c:{request[2]}')
+
+    response = solve_sqr(request[0], request[1], request[2])
+
+    client_connection.sendall(response.encode())
+
+    client_connection.close()
+    print(&quot;соединение закрыто, ждем следующие запросы...&quot;)
 </code></pre>
 <h2 id="_5">Результат</h2>
-<p>При запуске сервер ожидает сообщения.
-На стороне клиента:</p>
-<pre><code>Hello, client!
-</code></pre>
-<p>На стороне сервера:</p>
-<pre><code>Hello, server!
-</code></pre>
-<p>Результаты работы после запуска обоих файлов:</p>
-<p><img alt="" src="../assets/task1server.png" />
-<img alt="" src="../assets/task1client.png" /></p>
+<p>Варианты ответа клиенту:</p>
+<p><img alt="" src="../assets/task2client0.png" />
+<img alt="" src="../assets/task2client1.png" /></p>
+<p>Работа сервера:</p>
+<p><img alt="" src="../assets/task2server.png" /></p>
 <h2 id="_6">Вывод</h2>
-<p>Была успешно реализована простая клиент-серверная архитектура с использованием UDP-сокетов. Клиент отправляет сообщение серверу, сервер его принимает и отвечает клиенту.</p>
+<p>Была реализована клиент-серверная архитектура с использованием TCP-сокетов для решения квадратного уравнения.</p>
 
 
 
