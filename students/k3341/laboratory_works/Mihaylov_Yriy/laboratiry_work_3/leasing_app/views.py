@@ -505,4 +505,44 @@ class AdminCarFleetAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class CarLeasingsListAPIView(APIView):
+    serializer_class = LeaseSerializer
+
+    def get(self, request, id):
+        car = get_object_or_404(Car, id=id)
+        leasings = Lease.objects.filter(car=car).order_by("id")
+        serializer = self.serializer_class(leasings, many=True)
+        return Response({"leasings": serializer.data})
+
+
+
+class CarSpecificationsListAPIView(APIView):
+    serializer_class = CarSpecificationSerializer
+
+    def get(self, request, id):
+        car = get_object_or_404(Car, id=id)
+        specs = CarSpecification.objects.filter(car=car).order_by("id")
+        serializer = self.serializer_class(specs, many=True)
+        return Response({"specifications": serializer.data})
+
+
+
+class CarSpecificationCreateAPIView2(APIView):
+    serializer_class = CarSpecificationSerializer
+
+    def post(self, request, id):
+        car = get_object_or_404(Car, id=id)
+
+        data = request.data.copy()
+        data["car"] = car.id
+
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"specification": serializer.data}, status=201)
+
+        return Response(serializer.errors, status=400)
+
+
+
 

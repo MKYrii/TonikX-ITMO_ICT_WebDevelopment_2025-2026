@@ -56,18 +56,19 @@ class CarFleetSerializer(serializers.ModelSerializer):
 
 
 class CarSerializer(serializers.ModelSerializer):
-    specification = CarSpecificationSerializer()
+    specification = CarSpecificationSerializer(required=False, read_only=True)
     class Meta:
         model = Car
         fields = [
             "id", "make", "model", "year",
-            "license_plate", "status", "current_mileage", "created_at"
+            "license_plate", "status", "current_mileage", "created_at",
+            "specification"
         ]
 
 
 class CarDetailSerializer(serializers.ModelSerializer):
-    specification = CarSpecificationSerializer()
-    car_fleet = CarFleetSerializer()
+    specification = CarSpecificationSerializer(required=False, read_only=True)
+    car_fleet = CarFleetSerializer(required=False, read_only=True)
 
     class Meta:
         model = Car
@@ -86,6 +87,7 @@ class MaintenanceCompanySerializer(serializers.ModelSerializer):
 
 
 class MaintenanceSerializer(serializers.ModelSerializer):
+    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all())
     maintenance_company = serializers.PrimaryKeyRelatedField(
         queryset=MaintenanceCompany.objects.all()
     )

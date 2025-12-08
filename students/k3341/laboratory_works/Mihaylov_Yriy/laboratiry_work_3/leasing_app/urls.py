@@ -56,4 +56,20 @@ urlpatterns = [
     path("admin/car_specifications/", AdminCarSpecificationAPIView.as_view()),
     path("admin/fleets/", AdminFleetAPIView.as_view()),
     path("admin/car_fleets/", AdminCarFleetAPIView.as_view()),
+
+    path(
+        "admin/cars/<int:id>/leasings",
+        CarLeasingsListAPIView.as_view(),
+        name="car-leasings-list"
+    ),
+    path(
+        "admin/cars/<int:id>/specifications",
+        CarSpecificationsListAPIView.as_view(),
+        name="car-specifications-list"
+    ),
+    path(
+        "admin/cars/<int:id>/specifications/create",
+        CarSpecificationCreateAPIView2.as_view(),
+        name="car-specifications-create"
+    ),
 ]
