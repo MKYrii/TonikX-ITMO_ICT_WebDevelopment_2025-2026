@@ -72,4 +72,7 @@ urlpatterns = [
         CarSpecificationCreateAPIView2.as_view(),
         name="car-specifications-create"
     ),
+    path("admin/reports/revenue/", CarLeasingStatsAPIView.as_view(), name="report_revenue"),
+    path("admin/reports/utilization/", CarUtilizationAPIView.as_view(), name="report_utilization"),
+    path("admin/reports/maintenance_costs/", MaintenanceCostReportAPIView.as_view(), name="report_maintenance_costs"),
 ]

@@ -60,11 +60,27 @@ class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = [
-            "id", "make", "model", "year",
+            "id", "make", "model", "year", "vin",
             "license_plate", "status", "current_mileage", "created_at",
             "specification"
         ]
-
+{
+  "make": "toyota",
+  "model": "3",
+  "year": 2020,
+  "vin": "3",
+  "license_plate": "3",
+  "status": "available",
+  "current_mileage": 0
+}
+{
+"lease_id": 1,
+  "start_date": "2025-05-05",
+  "end_date": "2025-10-05",
+  "monthly_payment": "100",
+  "status": "active",
+  "created_by_admin": 0
+}
 
 class CarDetailSerializer(serializers.ModelSerializer):
     specification = CarSpecificationSerializer(required=False, read_only=True)
@@ -120,7 +136,14 @@ class LeaseSerializer(serializers.ModelSerializer):
 class LeaseStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lease
-        fields = ["status"]
+        fields = [
+            "car",
+            "client",
+            "start_date",
+            "end_date",
+            "monthly_payment",
+            "status",
+        ]
 
 
 class LeaseApplicationSerializer(serializers.ModelSerializer):

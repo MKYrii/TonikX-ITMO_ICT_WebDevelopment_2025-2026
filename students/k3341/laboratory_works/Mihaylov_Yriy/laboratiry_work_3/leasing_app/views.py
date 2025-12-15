@@ -1,10 +1,18 @@
+from datetime import date
 
+from django.db.models import IntegerField, Count
+from django.db.models import (
+    Sum, F, FloatField,
+    ExpressionWrapper, Case, When
+)
+from django.db.models.functions import ExtractDay
 from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView
-from rest_framework.response import Response
+from django.utils.timezone import now
 from rest_framework import status
+from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import (
     Car, CarSpecification, MaintenanceCompany, Maintenance,
@@ -206,6 +214,11 @@ class LeaseApplicationAPIView(APIView):
             created_by_admin=request.user
         )
 
+        # {"end_date": "2025-12-12",
+        #  "start_date": "2025-12-11",
+        #  "monthly_payment": 10
+        #  }
+
         app.car.status = "leased"
         app.car.save()
 
@@ -221,7 +234,7 @@ class LeaseApplicationAPIView(APIView):
 
 class LeaseAPIView(APIView):
     permission_classes = [IsAdminUser]
-    serializer_class = LeaseSerializer   # ← добавлено, чтобы spectacular не ругался
+    serializer_class = LeaseSerializer
 
     def get(self, request):
         leases = Lease.objects.all()
@@ -264,6 +277,9 @@ class LeaseAPIView(APIView):
         """Обновление статуса аренды"""
         lease_id = request.data.get("lease_id")
         new_status = request.data.get("status")
+        end_date = request.data.get("end_date")
+        start_date = request.data.get("start_date")
+        monthly_payment = request.data.get("monthly_payment")
 
         if not lease_id or not new_status:
             return Response(
@@ -279,7 +295,11 @@ class LeaseAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = LeaseStatusUpdateSerializer(lease, data={"status": new_status}, partial=True)
+        serializer = LeaseStatusUpdateSerializer(lease, data={
+            "status": new_status,
+            "start_date": start_date,
+            "end_date": end_date,
+            "monthly_payment": monthly_payment}, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -544,5 +564,68 @@ class CarSpecificationCreateAPIView2(APIView):
         return Response(serializer.errors, status=400)
 
 
+class CarLeasingStatsAPIView(APIView):
+    """ отчет по доходам от каждого авто """
+    def get(self, request):
+        qs = (
+            Car.objects
+            .annotate(
+                leasings_count=Count("leases"),
+                total_income=Sum("leases__monthly_payment")
+            )
+            .values("make", "model", "leasings_count", "total_income")
+        )
+        return Response({"results": list(qs)})
 
+
+class CarUtilizationAPIView(APIView):
+    """ отчет по использованию авто """
+    def get(self, request):
+        cars = Car.objects.all().prefetch_related("leases")
+
+        results = []
+        today = date.today()
+
+        for car in cars:
+            total_days = (today - (car.purchase_date or today)).days or 1
+
+            lease_days = 0
+            for lease in car.leases.all():
+                start = lease.start_date
+                end = lease.end_date or today
+                lease_days += (end - start).days
+
+            utilization = round(lease_days / total_days, 3)/365 if total_days > 0 else None
+
+            results.append({
+                "make": car.make,
+                "model": car.model,
+                "license_plate": car.license_plate,
+                "lease_days": lease_days,
+                "utilization": utilization
+            })
+
+        return Response({"results": results})
+
+
+class MaintenanceCostReportAPIView(APIView):
+    """отчет по тратам на обслуживание для каждого авто"""
+    def get(self, request):
+        qs = Maintenance.objects.values(
+            "car__id",
+            "car__make",
+            "car__model"
+        ).annotate(
+            total_cost=Sum("cost")
+        ).order_by("car__id")
+
+        results = []
+        for item in qs:
+            results.append({
+                "car_id": item["car__id"],
+                "car": f"{item['car__make']} {item['car__model']}",
+                "total_maintenance_cost": item["total_cost"] or 0
+            })
+
+        return Response({"results": results})
 
