@@ -19,6 +19,9 @@ nav:
       - 3.1: pr31.md
       - 3.2: pr32.md
 
+  - Лабораторная работа №4:
+      - Сервис лизинга авто (frontend): lab4.md
+
 theme:
   name: material
   language: ru
