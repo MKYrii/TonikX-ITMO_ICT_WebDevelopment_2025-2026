@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     path(
         "admin/leases/<int:id>/",
-        LeaseAPIView.as_view(),
+        Lease1APIView.as_view(),
         name="admin_lease_detail"
     ),
     path(
@@ -62,11 +62,7 @@ urlpatterns = [
         CarLeasingsListAPIView.as_view(),
         name="car-leasings-list"
     ),
-    path(
-        "admin/cars/<int:id>/specifications",
-        CarSpecificationsListAPIView.as_view(),
-        name="car-specifications-list"
-    ),
+
     path(
         "admin/cars/<int:id>/specifications/create",
         CarSpecificationCreateAPIView2.as_view(),

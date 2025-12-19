@@ -229,8 +229,33 @@ class LeaseApplicationAPIView(APIView):
             status=status.HTTP_201_CREATED
         )
 
+    def delete(self, request, id=None):
+        if id is None:
+            return Response(
+                {"error": "ID обязателен для удаления"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        app = get_object_or_404(LeaseApplication, id=id)
+        app.delete()
+
+        return Response(
+            {"success": f"Заявка #{id} успешно удалена"},
+            status=status.HTTP_200_OK
+        )
+
 
 # ------------------------ LEASES ------------------------
+class Lease1APIView(APIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = LeaseSerializer
+
+    def get(self, request, id):
+
+        lease = get_object_or_404(Lease, id=id)
+        serializer = LeaseSerializer(lease)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class LeaseAPIView(APIView):
     permission_classes = [IsAdminUser]
@@ -302,6 +327,10 @@ class LeaseAPIView(APIView):
             "monthly_payment": monthly_payment}, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        if new_status != "active":
+            car = Car.objects.get(id=lease.car.id)
+            car.status = "available"
+            car.save()
 
         return Response({"success": "Статус обновлен"}, status=status.HTTP_200_OK)
 
